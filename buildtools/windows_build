@@ -1,0 +1,89 @@
+#!/bin/bash
+
+#
+# windows_build builds binaries for newt and newtgmr.  
+# It creates tar files of the binaries and places them in 
+# the runtimeco/binary-releases/mynewt-newt-tools_{vers} directory.
+#
+
+if [ "$#" -ne 2]; then
+    echo "usage: linux_build <rel-num> <parent-dir of the binary-releases repos>"
+    echo "For example, if the repos are under ~/runtimeco, then enter ~/runtimeco"
+    exit 1
+fi
+
+set -e
+
+# build version with _. For example, 1.3.0 -> 1_3_0
+new_vers="$1"
+underscore_vers="$(echo "${new_vers}" | sed 's/\./_/g')"
+build_root="/tmp/build_${new_vers}"
+repo_root="$2"
+binary_dir="${repo_root}"/binary-releases
+release_dir=${binary_dir}/mynewt-newt-tools_${new_vers}
+
+branch_name=build_${underscore_vers}
+cd ${binary_dir}
+echo "==== Creating ${branch_name} branch for ${binary_dir} repo"
+git checkout master
+git pull
+git branch -f ${branch_name}
+git checkout ${branch_name}
+
+echo "====Creating ${release_dir}===="
+mkdir -p "${release_dir}"
+
+
+function build() {
+    set -e
+    build_dir=${build_root}/$1_${new_vers}
+    tool_name=$1
+    tag_name=mynewt_${underscore_vers}_tag
+    srcdir=mynewt-${tool_name}-"${tag_name}" 
+    bintar=${tool_name}_${underscore_vers}_windows_amd64.tar.gz
+	
+    rm -rf "${build_dir}"
+    mkdir -p "${build_dir}"
+    cd "${build_dir}"
+
+    echo "===Building binary for ${tool_name} version ${new_vers}==="
+
+    tarfile=${tag_name}.tar.gz
+
+
+# Download and extract release source file
+    tarurl=https://github.com/apache/mynewt-${tool_name}/archive/${tarfile}
+    echo "====Downloading ${tarurl}===="
+    wget "${tarurl}"
+    tar -xzf ${tarfile}
+    cd ${srcdir}
+    make build
+    cd ..
+    curdir=$(pwd)
+    cd ${srcdir}/${tool_name}
+    tar -czf ${build_dir}/${bintar} ${tool_name}.exe
+    cp ${build_dir}/${bintar} ${release_dir}/.
+}
+
+build newt
+build newtmgr
+
+
+# git add the new files in binary-release/mynewt-newt-tools_{vers}  directory
+cd ${binary_dir}
+echo "====git add  ${release_dir}===="
+git add "${release_dir}"
+echo "====Done!===="
+
+echo "************************************************************************"
+echo " NOTE:You must manually do the following:"
+echo "  The ${binary_dir} repo:"
+echo "    1. cd ${binary_dir}"
+echo "    2. git commit -m \" build Windows installations for ${new_vers} \" "
+echo "    3. git push origin ${branch_name}"
+echo "    4. Create a PR and merge the changes in to master."
+echo ""
+echo "************************************************************************"
+
+exit 0
+

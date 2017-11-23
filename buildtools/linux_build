@@ -1,0 +1,168 @@
+#!/bin/bash
+
+#
+# linux_build builds deb packges for newt and newtgmr.  
+# The deb package are store in two places: 
+#  1. runtimeco/binary-releases/mynewt-newt-tools_{vers} directory for 
+#     users to download and install using dpkg -i 
+#  2. runtimeco/debian-mynewt for users to install using apt-get install.
+#
+
+if [ "$#" -ne 2 ]; then
+    echo "usage: linux_build <rel-num>  <parent-dir of debian-mynewt and binary-releases repos>"
+    echo "For example, if the repos are under ~/runtimeco, then enter ~/runtimeco"
+    exit 1
+fi
+
+set -e
+
+# build version with _. For example, 1.3.0 -> 1_3_0
+new_vers="$1"
+underscore_vers="$(echo "${new_vers}" | sed 's/\./_/g')"
+repo_root="$2"
+build_root="/tmp/build_${new_vers}"
+aptrepo_dir="${repo_root}"/debian-mynewt
+binary_dir="${repo_root}"/binary-releases
+release_dir=${binary_dir}/mynewt-newt-tools_${new_vers}
+
+branch_name=build_${underscore_vers}
+
+cd ${aptrepo_dir}
+echo "==== Creating ${branch_name} branch for ${aptrepo_dir} repo"
+git checkout master
+git pull
+git branch -f ${branch_name}
+git checkout ${branch_name}
+
+cd ${binary_dir}
+echo "==== Creating ${branch_name} branch for ${binary_dir} repo"
+git checkout master
+git pull
+git branch -f ${branch_name}
+git checkout ${branch_name}
+
+
+echo "====Creating ${release_dir}===="
+mkdir -p "${release_dir}"
+
+
+function builddeb() {
+    set -e
+    build_dir=${build_root}/$1_${new_vers}
+    echo "build_dir is ${build_dir}"
+    tool_name=$1
+    rm -rf "${build_dir}"
+    mkdir -p "${build_dir}"
+    cd "${build_dir}"
+
+    echo "===Building debian package for ${tool_name} version ${new_vers}==="
+    tag_name=mynewt_${underscore_vers}_tag
+
+    tarfile=${tag_name}.tar.gz
+
+
+# Download and extract release source file
+    tarurl=https://github.com/apache/mynewt-${tool_name}/archive/${tarfile}
+    echo "====Downloading ${tarurl}===="
+    wget "${tarurl}"
+    tar -xzf ${tarfile}
+    new_dir="${tool_name}"-"${new_vers}"
+
+    mv mynewt-${tool_name}-"${tag_name}" "${new_dir}"
+    cd "${new_dir}"
+
+#   create debian structure needed to build the debian pkg.
+
+    dh_make --copyright apache --s --y -f ../*.gz
+    cd debian
+
+# Update Control debian/control file 
+# 1. Change Section from unknown to main
+# 2. Change homepage to https://mynewt.apache.org
+    sed '
+        /Section/ s/unknown/main/
+        /Homepage/ s/^.*/Homepage: https:\/\/mynewt.apache.org/
+    ' control > /tmp/control
+    mv /tmp/control .
+
+# Update debian/copyright file:
+# 1. Update Source URl to https://github.com/apache/mynewt-<newt|newtmgr>
+# 2. Remove Copyright lines.
+    sed '
+        /Source:/ s/^.*/Source: https:\/\/github.com\/apache\/mynewt-'"${tool_name}"'/
+        /Copyright:/ d
+        /<years>/ d
+    ' copyright > /tmp/copyright
+    mv /tmp/copyright .
+
+# Update debian/changelog file.
+# 1. Change unstable to stable
+# 2. Change urgency from medium to low
+# 3. Set to Initial Release
+    sed '
+       s/unstable/stable/
+       s/=medium/=low/
+       /Initial/ s/(Closes:.*//
+    ' changelog > /tmp/changelog
+    mv /tmp/changelog  .
+
+# Remove unused files.
+    rm README.*
+    rm *.ex
+    rm *.EX
+    rm *.docs
+    cd ..
+
+# Build the package
+    dpkg-buildpackage -us -uc
+
+# Copy the deb package to binary-release/mynewt-newt-tools_{vers} so
+# so users can download deb package and install with dpkg -i instead
+# of apt-get install
+    echo "===Copying ${tool-name} version ${new_vers} deb package to ${release_dir}==="
+    echo "build dir is ${build_dir}"	
+    cp "${build_dir}"/*.deb "${release_dir}"/
+
+# Add the debian package to debian-mynewt github repo  so package can be
+# install using apt-get install
+
+    echo "===Adding ${tool-name} version ${new_vers} deb package to apt repo==="
+    echo "You may be prompted to enter passphrase for the repo."
+    cd ${aptrepo_dir}
+    reprepro includedeb latest "${build_dir}"/*.deb 
+
+}
+
+builddeb newt
+builddeb newtmgr
+
+# git add the new files in binary-release/mynewt-newt-tools_{vers}  directory
+cd ${binary_dir}
+echo "====git add  ${release_dir}===="
+git add "${release_dir}"
+# git add the debian-mynewt repo
+echo "====git add db dists pool in ${aptrepo_dir}===="
+cd ${aptrepo_dir}
+git add db dists pool
+
+echo "====Done!===="
+
+echo "************************************************************************"
+echo " NOTE:You must manually do the following:"
+echo "  The ${binary_dir} repo:"
+echo "    1. git commit -m \" build linux installations for ${new_vers} \" "
+echo "    2. git push origin ${branch_name}"
+echo "    3. Create a PR and merge the changes in to master."
+echo ""
+echo "  The ${aptrepo_dir} repo:"
+echo "    1. cd ${aptrepo_dir}"
+echo "    2. git commit -m \" build linux installations for ${new_vers} \""
+echo "    3. git push origin ${branch_name}"
+echo "    4. Create a PR but DO NOT merge the changes into master."
+echo ""
+echo "    After the mynewt-apache.org documentation has been updated and the"
+echo "    final release email is sent out, merge the PR changes into master"
+echo "************************************************************************"
+
+exit 0
+
