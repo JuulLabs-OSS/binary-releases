@@ -8,7 +8,8 @@
 #  2. runtimeco/debian-mynewt for users to install using apt-get install.
 #
 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -ne 2 ] 
+then
     echo "usage: linux_build <rel-num>  <parent-dir of debian-mynewt and binary-releases repos>"
     echo "For example, if the repos are under ~/runtimeco, then enter ~/runtimeco"
     exit 1

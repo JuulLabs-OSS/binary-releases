@@ -17,7 +17,8 @@
 # the bottles for the current_version are removed from the directory.
 # 
 set -e 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -ne 2 ] 
+then
     echo "Usage: mac_build <new-release#> <parent directory of the binary-releases repo>"
     echo "For example, if the repo is under  ~/runtimeco then enter ~/runtimeco"
     exit 1

@@ -6,7 +6,8 @@
 # the runtimeco/binary-releases/mynewt-newt-tools_{vers} directory.
 #
 
-if [ "$#" -ne 2]; then
+if [ "$#" -ne 2 ]
+then
     echo "usage: windows_build <rel-num> <parent-dir of the binary-releases repos>"
     echo "For example, if the repos are under ~/runtimeco, then enter ~/runtimeco"
     exit 1
