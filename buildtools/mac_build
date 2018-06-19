@@ -101,6 +101,8 @@ function newformula () {
     ' ${newvers_formula} > /tmp/${newvers_formula}
     cp /tmp/${newvers_formula} ${formula_path}/${newvers_formula}
 
+    echo "==== Uninstalling older version for ${tool_name}"
+    brew uninstall --force ${tool_name}
     echo "==== Building bottle for ${newvers_formula} ===="
     brew install --build-bottle ${tool_name}
     bottle_hash="$(brew bottle ${tool_name} | grep sha256)"
