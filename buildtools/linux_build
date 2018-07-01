@@ -52,6 +52,12 @@ function builddeb() {
     build_dir=${build_root}/$1_${new_vers}
     echo "build_dir is ${build_dir}"
     tool_name=$1
+    if [ "$1" == "newt" ]
+    then
+         desc="Description: Build and package management for Mynewt OS applications"
+    else
+         desc="Description: Tool to communicate with Mynewt OS devices"
+    fi
     rm -rf "${build_dir}"
     mkdir -p "${build_dir}"
     cd "${build_dir}"
@@ -83,6 +89,8 @@ function builddeb() {
     sed '
         /Section/ s/unknown/main/
         /Homepage/ s/^.*/Homepage: https:\/\/mynewt.apache.org/
+        /Description/ s/^.*/'"$desc"'/
+        / <insert/ d
     ' control > /tmp/control
     mv /tmp/control .
 
