@@ -131,6 +131,7 @@ function newformula () {
         }
     '  ${curvers_formula} > /tmp/${curvers_formula}
     cp /tmp/${curvers_formula}  ${curvers_formula}
+    brew uninstall --force ${curvers_tool_name}
     brew install --build-bottle ${curvers_tool_name}
     bottle_hash="$(brew bottle ${curvers_tool_name} | grep sha256)"
     sed '/^[\t ]*cellar/ s/^.*$/&\
