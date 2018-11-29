@@ -113,7 +113,7 @@ function newformula () {
     cp /tmp/${newvers_formula} ${newvers_formula}
 
     echo "=== Moving bottle to ${newvers_binary_dir} "
-    mv "${tool_name}-${new_vers}"."${mac_os_string}".bottle*.tar.gz  ${newvers_binary_dir}
+    mv "${tool_name}--${new_vers}"."${mac_os_string}".bottle*.tar.gz  ${newvers_binary_dir}
 
 # create a @version formula for the current version.
 
@@ -139,7 +139,7 @@ function newformula () {
     cp /tmp/${curvers_formula} ${curvers_formula}
 
     echo "==== Moving ${curvers_tool_name} bottles to ${curvers_binary_dir} ===="
-    mv "${curvers_tool_name}-${cur_vers}"."${mac_os_string}".bottle*.tar.gz  ${curvers_binary_dir}/
+    mv "${curvers_tool_name}--${cur_vers}"."${mac_os_string}".bottle*.tar.gz  ${curvers_binary_dir}/
 }   
 
 newformula "newt"
