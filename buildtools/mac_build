@@ -28,8 +28,14 @@ mac_version="$(sw_vers | grep ProductVersion | cut -f 2 -d ":" | cut -f 2 -d "."
 if [ "$mac_version" -eq 12 ] 
 then 
     mac_os_string="sierra"
+elif [ "$mac_version" -eq 13 ] 
+then 
+    mac_os_string="high_sierra"
+elif [ "$mac_version" -eq 14 ]
+then
+    mac_os_string="mojave"
 else
-    echo "Mac OS version too old"
+    echo "Unsupported macOS version (have=10.$mac_version want=10.[12,14])"
     exit 1
 fi
 
