@@ -20,7 +20,7 @@ set -e
 if [ "$#" -ne 2 ] 
 then
     echo "Usage: mac_build <new-release#> <parent directory of the binary-releases repo>"
-    echo "For example, if the repo is under  ~/runtimeco then enter ~/runtimeco"
+    echo "For example, if the repo is under  ~/JuulLabs-OSS then enter ~/JuulLabs-OSS"
     exit 1
 fi
 
@@ -45,7 +45,7 @@ underscore_vers="$(echo "${new_vers}" | sed 's/\./_/g')"
 
 binary_repo_root="$2"
 binary_repo=${binary_repo_root}/binary-releases
-formula_path=/usr/local/Homebrew/Library/Taps/runtimeco/homebrew-mynewt
+formula_path=/usr/local/Homebrew/Library/Taps/juullabs-oss/homebrew-mynewt
 
 branch_name=build_${underscore_vers}
 cd ${binary_repo}
