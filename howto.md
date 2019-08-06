@@ -13,7 +13,7 @@ shasum -a 256 mynewt_1_7_0_tag.tar.gz   # Remember the output of this command.
 # Edit /usr/local/Homebrew/Library/Taps/juullabs-oss/homebrew-mynewt/mynewt-newt.rb.
 1. Replace 1.6 with 1.7
 2. Replace 1_6 with 1_7
-3. Delete the entire `bottle do` block.
+3. In the `bottle do` block, replace the sha256 with that in the output from the `brew bottle` command.
 4. Replace the top level "sha256" field with the shasum output (previous shell command).
 
 # Create the bottle.
