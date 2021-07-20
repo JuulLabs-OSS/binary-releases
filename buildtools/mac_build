@@ -24,18 +24,20 @@ then
     exit 1
 fi
 
-mac_version="$(sw_vers | grep ProductVersion | cut -f 2 -d ":" | cut -f 2 -d ".")"
-if [ "$mac_version" -eq 12 ] 
-then 
+mac_version=$(sw_vers -productVersion)
+echo OSX:$mac_version detected
+if [[ "$mac_version" == 10.12 ]]; then 
     mac_os_string="sierra"
-elif [ "$mac_version" -eq 13 ] 
-then 
+elif [[ "$mac_version" == 10.13 ]]; then 
     mac_os_string="high_sierra"
-elif [ "$mac_version" -eq 14 ]
-then
+elif [[ "$mac_version" == 10.14 ]]; then
     mac_os_string="mojave"
+elif [[ "$mac_version" == 11.3 ]]; then
+    mac_os_string="big_sur"
+elif [[ "$mac_version" == 11.4 ]]; then
+    mac_os_string="big_sur"
 else
-    echo "Unsupported macOS version (have=10.$mac_version want=10.[12,14])"
+    echo "Unsupported macOS version have=$mac_version want=10.[12,14] to 11.[3,4]"
     exit 1
 fi
 
